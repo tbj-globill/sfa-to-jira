@@ -1,0 +1,14 @@
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud functions deploy sync_salesforce_to_jira \
+          --gen2 \
+          --runtime python311 \
+          --region asia-southeast1 \
+          --source . \
+          --entry-point hello_world \
+          --trigger-http \
+          --allow-unauthenticated
