@@ -67,7 +67,6 @@ def get_recent_accounts(token, instance_url):
     WHERE RecordType.DeveloperName = 'B2B_Accounts'
     AND EGFS1_Not_Active__c = false
     AND LastModifiedDate = TODAY
-    LIMIT 10
     """
     return soql(instance_url, token, query).get("records", [])
 
@@ -208,7 +207,7 @@ def update_org_detail_field(org_id, field_name, value):
             else: 
                 break
         except Exception as e:
-            print(f"   ❌ Error updating Org Field {field_name}: {e}")
+            print(f"   ❌ Error updating Org Field {field_name}: {e} - {org_id}")
             time.sleep(1)
             
     print(f"   ⚠️ [ORG UPDATE] Failed: {field_name}")
@@ -233,10 +232,10 @@ def update_customer_detail_field(account_id, field_name, value):
             elif r.status_code == 404: time.sleep(attempt * 2)
             elif r.status_code == 429: time.sleep(5)
             else: 
-                print(f"   ⚠️ Failed {field_name}: {r.status_code} {r.text}")
+                print(f"   ⚠️ Failed {field_name}: {r.status_code} {r.text} - {account_id}")
                 break
         except Exception as e:
-            print(f"   ❌ Error updating Customer Field {field_name}: {e}")
+            print(f"   ❌ Error updating Customer Field {field_name}: {e} - {account_id}")
             time.sleep(1)
             
     print(f"   ⚠️ [CUSTOMER UPDATE] Failed: {field_name}")
@@ -314,28 +313,19 @@ def process_single_account(acc, sf_token, sf_instance):
         print(f"❌ Error processing {acc.get('Name')}: {e}")
 
 # ===========================
-# CLOUD FUNCTION HANDLER
+# LAMBDA HANDLER
 # ===========================
-from flask import jsonify
-
-def sync_salesforce_to_jira(request):
+def lambda_handler(event, context):
     try:
         token, instance = get_salesforce_token()
         accounts = get_recent_accounts(token, instance)
-
         print(f"Processing {len(accounts)} updated accounts today.")
 
         for acc in accounts:
             process_single_account(acc, token, instance)
 
-        return jsonify({
-            "status": "ok",
-            "accounts_processed": len(accounts)
-        }), 200
+        return {"status": "ok", "accounts_processed": len(accounts)}
 
     except Exception as e:
         print(f"❌ Critical Error: {str(e)}")
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
+        return {"status": "error", "message": str(e)}
