@@ -185,7 +185,7 @@ def add_users_to_org(org_id, ids):
 # ===========================
 # ROBUST UPDATE FUNCTIONS
 # ===========================
-def update_org_detail_field(org_id, field_name, value):
+def update_org_detail_field(org_id, field_name, value, org_name):
     if not value: return False
 
     url = f"https://api.atlassian.com/jsm/csm/cloudid/{JIRA_CLOUD_ID}/api/v1/organization/{org_id}/details"
@@ -198,7 +198,7 @@ def update_org_detail_field(org_id, field_name, value):
         try:
             r = requests.put(url, data=payload, headers=JIRA_HEADERS, params=query, auth=AUTH)
             if r.status_code == 200:
-                print(f"   ✅ [ORG UPDATE] Success: {field_name}")
+                print(f"   ✅ [ORG UPDATE] Success: {field_name} for '{org_name}'")
                 return True
             if r.status_code == 404: 
                 time.sleep(attempt * 1.5)
@@ -207,13 +207,13 @@ def update_org_detail_field(org_id, field_name, value):
             else: 
                 break
         except Exception as e:
-            print(f"   ❌ Error updating Org Field {field_name}: {e} - {org_id}")
+            print(f"   ❌ [ORG: {org_name}] Error updating Field '{field_name}': {e}")
             time.sleep(1)
             
-    print(f"   ⚠️ [ORG UPDATE] Failed: {field_name}")
+    print(f"   ⚠️ [ORG: {org_name}] Failed to update: {field_name}")
     return False
 
-def update_customer_detail_field(account_id, field_name, value):
+def update_customer_detail_field(account_id, field_name, value, customer_email):
     if not value: return False
 
     url = f"https://api.atlassian.com/jsm/csm/cloudid/{JIRA_CLOUD_ID}/api/v1/customer/{account_id}/details"
@@ -227,18 +227,18 @@ def update_customer_detail_field(account_id, field_name, value):
         try:
             r = requests.put(url, data=payload, headers=JIRA_HEADERS, params=query, auth=AUTH)
             if r.status_code == 200: 
-                print(f"   ✅ [CUSTOMER UPDATE] Success: {field_name}")
+                print(f"   ✅ [CUSTOMER UPDATE] Success: {field_name} for {customer_email}")
                 return True
             elif r.status_code == 404: time.sleep(attempt * 2)
             elif r.status_code == 429: time.sleep(5)
             else: 
-                print(f"   ⚠️ Failed {field_name}: {r.status_code} {r.text} - {account_id}")
+                print(f"   ⚠️ [USER: {customer_email}] Failed {field_name}: {r.status_code} {r.text}")
                 break
         except Exception as e:
-            print(f"   ❌ Error updating Customer Field {field_name}: {e} - {account_id}")
+            print(f"   ❌ [USER: {customer_email}] Error updating Field '{field_name}': {e}")
             time.sleep(1)
             
-    print(f"   ⚠️ [CUSTOMER UPDATE] Failed: {field_name}")
+    print(f"   ⚠️ [USER: {customer_email}] Failed update: {field_name}")
     return False
 
 # ===========================
